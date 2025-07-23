@@ -1,0 +1,23 @@
+.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.sortable:hover {
+  background-color: rgb(31, 113, 228);
+
+}
+
+.sortable i {
+  margin-left: 8px;
+  opacity: 0.6;
+}
+
+.sortable i.fa-sort-up,
+.sortable i.fa-sort-down {
+  opacity: 1;
+}
+
+.btn-sm {
+  font-size: 0.875rem;
+}

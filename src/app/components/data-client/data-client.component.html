@@ -1,23 +1,78 @@
 <div class="container py-4">
-  <h2 class="mb-4">Elenco Clienti</h2>
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Elenco Clienti</h2>
+    <button class="btn btn-primary" (click)="nuovaAnagrafica()">
+      <i class="fas fa-plus"></i> Nuova Anagrafica
+    </button>
+  </div>
+  
+  <!--Filtri per colonne -->
+  <div class="row mb-3">
+    <div class="col-md-3">
+      <input type="text" class="form-control" placeholder="Filtra per Nome" 
+             [(ngModel)]="filtri.nome" (input)="applicaFiltri()">
+    </div>
+    <div class="col-md-3">
+      <input type="text" class="form-control" placeholder="Filtra per Cognome" 
+             [(ngModel)]="filtri.cognome" (input)="applicaFiltri()">
+    </div>
+    <div class="col-md-3">
+      <input type="text" class="form-control" placeholder="Filtra per Comune" 
+             [(ngModel)]="filtri.comune" (input)="applicaFiltri()">
+    </div>
+    <div class="col-md-3">
+      <input type="text" class="form-control" placeholder="Filtra per Email" 
+             [(ngModel)]="filtri.email" (input)="applicaFiltri()">
+    </div>
+  </div>
+
   <div class="table-responsive">
     <table class="table table-striped table-hover">
       <thead class="table-dark">
         <tr>
-          <th scope="col">Nome</th>
-          <th scope="col">Cognome</th>
-          <th scope="col">Comune</th>
-          <th scope="col">Email</th>
+          <th scope="col" class="sortable" (click)="ordinaPer('nome')">
+            Nome 
+            <!--Icona per ordinamento che si attiva al click e cambia direzione -->
+            <i class="fas fa-sort" [class.fa-sort-up]="ordinamento.campo === 'nome' && ordinamento.direzione === 'asc'"
+               [class.fa-sort-down]="ordinamento.campo === 'nome' && ordinamento.direzione === 'desc'"></i>
+          </th>
+          <th scope="col" class="sortable" (click)="ordinaPer('cognome')">
+            Cognome 
+            <i class="fas fa-sort" [class.fa-sort-up]="ordinamento.campo === 'cognome' && ordinamento.direzione === 'asc'"
+               [class.fa-sort-down]="ordinamento.campo === 'cognome' && ordinamento.direzione === 'desc'"></i>
+          </th>
+          <th scope="col" class="sortable" (click)="ordinaPer('comune')">
+            Comune 
+            <i class="fas fa-sort" [class.fa-sort-up]="ordinamento.campo === 'comune' && ordinamento.direzione === 'asc'"
+               [class.fa-sort-down]="ordinamento.campo === 'comune' && ordinamento.direzione === 'desc'"></i>
+          </th>
+          <th scope="col" class="sortable" (click)="ordinaPer('email')">
+            Email 
+            <i class="fas fa-sort" [class.fa-sort-up]="ordinamento.campo === 'email' && ordinamento.direzione === 'asc'"
+               [class.fa-sort-down]="ordinamento.campo === 'email' && ordinamento.direzione === 'desc'"></i>
+          </th>
+          <th scope="col">Azioni</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let cliente of clienti">
+        <tr *ngFor="let cliente of clientiFiltrati">
           <td>{{ cliente.nome }}</td>
           <td>{{ cliente.cognome }}</td>
           <td>{{ cliente.comune }}</td>
           <td>{{ cliente.email }}</td>
+          <td>
+            <button class="btn btn-sm btn-outline-primary me-2" (click)="modificaCliente(cliente)">
+              <!--Icona bootstrap per modifica cliente -->
+              <i class="fas fa-edit"></i> Modifica
+            </button>
+            <button class="btn btn-sm btn-outline-danger" (click)="eliminaCliente(cliente)">
+              <!--Icona eliminazione cliente -->
+              <i class="fas fa-trash"></i> Elimina
+            </button>
+          </td>
         </tr>
       </tbody>
     </table>
+
   </div>
 </div>
