@@ -1,6 +1,8 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-data-client',
@@ -11,11 +13,13 @@ import { FormsModule } from '@angular/forms';
 export class DataClientComponent {
 
   clienti = [
-    { nome: 'Mario', cognome: 'Rossi', comune: 'Roma', email: 'mario.rossi@email.com' },
-    { nome: 'Lucia', cognome: 'Bianchi', comune: 'Milano', email: 'lucia.bianchi@email.com' },
-    { nome: 'Giuseppe', cognome: 'Verdi', comune: 'Napoli', email: 'giuseppe.verdi@email.com' },
-    { nome: 'Anna', cognome: 'Neri', comune: 'Milano', email: 'anna.neri@email.com' }
+    { id: 1, nome: 'Mario', cognome: 'Rossi', comune: 'Roma', email: 'mario.rossi@email.com' },
+    { id: 2, nome: 'Lucia', cognome: 'Bianchi', comune: 'Milano', email: 'lucia.bianchi@email.com' },
+    { id: 3, nome: 'Giuseppe', cognome: 'Verdi', comune: 'Napoli', email: 'giuseppe.verdi@email.com' },
+    { id: 4, nome: 'Anna', cognome: 'Neri', comune: 'Milano', email: 'anna.neri@email.com' }
   ];
+
+  constructor(private router: Router) {}
 
   clientiFiltrati = [...this.clienti];
 
@@ -34,7 +38,7 @@ export class DataClientComponent {
 
 
     /**  
-    * Funzione per ordinare i clienti in base al campo e alla direzione cliccati
+    * Funzione per assegnare i valori alla variabile locale in base ai filtri e all'ordinamento clicccato
     */
     ordinaPer(campo: string) {
     if (this.ordinamento.campo === campo) {
@@ -83,20 +87,43 @@ export class DataClientComponent {
 
 
   nuovaAnagrafica() {
-    console.log('Navigazione a nuova anagrafica');
+    this.router.navigate(['/cliente/nuovo']);
   }
 
   modificaCliente(cliente: any) {
-    console.log('Modifica cliente:', cliente);
+    this.router.navigate(['/cliente', cliente.id]); //passa l'id del cliente da modificare
   }
 
   eliminaCliente(cliente: any) {
-    if (confirm(`Sei sicuro di voler eliminare ${cliente.nome} ${cliente.cognome}?`)) {
-      const index = this.clienti.indexOf(cliente);
-      if (index > -1) {
-        this.clienti.splice(index, 1);
-        this.applicaFiltri();
+    //uso di SweetAlert per l'eliminazione
+    Swal.fire({
+      title: 'Conferma eliminazione',
+      text: `Sei sicuro di voler eliminare ${cliente.nome} ${cliente.cognome}?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Si, elimina!',
+      cancelButtonText: 'Annulla'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        //va sostituito con la logica di eliminazione del cliente nel database
+        const index = this.clienti.indexOf(cliente);
+        if (index > -1) {
+          this.clienti.splice(index, 1);
+
+          this.applicaFiltri();
+          
+          //messaggio di successo
+          Swal.fire({
+            title: 'Eliminato!',
+            text: `${cliente.nome} ${cliente.cognome} è stato eliminato.`,
+            icon: 'success',
+            timer: 2000,
+            showConfirmButton: false
+          });
+        }
       }
-    }
+    });
   }
 }
