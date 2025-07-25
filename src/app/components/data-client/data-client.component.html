@@ -71,7 +71,9 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let cliente of clientiFiltrati">
+        <tr *ngFor="let cliente of clientiFiltrati" 
+            [id]="'cliente-' + cliente.id"
+            [class.table-warning]="highlightedClientId === cliente.id">
           <td>{{ cliente.nome }}</td>
           <td>{{ cliente.cognome }}</td>
           <td>{{ cliente.comune || '-' }}</td>

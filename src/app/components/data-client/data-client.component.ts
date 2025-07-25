@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import Swal from 'sweetalert2';
 import { ClienteService } from '../../services/cliente.service';
 import { Cliente } from '../../models/cliente.model';
@@ -19,13 +19,22 @@ export class DataClientComponent implements OnInit {
   loading = false;
   error: string | null = null;
   clientiFiltrati: Cliente[] = [];
+  highlightedClientId: number | null = null;
 
   constructor(
     private router: Router,
+    private route: ActivatedRoute,
     private clienteService: ClienteService //gestisce operazioni CRUD sui clienti
   ) {}
 
   ngOnInit(): void {
+    // controlla cliente da evidenziare
+    this.route.queryParams.subscribe(params => {
+      if (params['highlight']) {
+        this.highlightedClientId = +params['highlight'];
+      }
+    });
+    
     this.caricaClienti();
   }
 
@@ -38,6 +47,11 @@ export class DataClientComponent implements OnInit {
         this.clienti = clienti;
         this.clientiFiltrati = [...clienti]; //per non avere riferimenti diretti
         this.loading = false;
+        
+        //cliente da evidenziare, scorri fino ad esso
+        if (this.highlightedClientId) {
+          setTimeout(() => this.scrollToClient(this.highlightedClientId!), 100);
+        }
       },
       error: (error) => {
         console.error('Errore nel caricamento dei clienti:', error);
@@ -161,5 +175,27 @@ export class DataClientComponent implements OnInit {
         });
       }
     });
+  }
+
+  /**
+   * Funzione per scorrere fino al cliente evidenziato
+   * @param clienteId ID del cliente da evidenziare
+   */
+  private scrollToClient(clienteId: number): void {
+    const element = document.getElementById(`cliente-${clienteId}`);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      
+      // timer dopo 3 secondi
+      setTimeout(() => {
+        this.highlightedClientId = null;
+        // rimuove il query param dall'URL senza ricaricare la pagina
+        this.router.navigate([], { 
+          relativeTo: this.route,
+          queryParams: {},
+          replaceUrl: true
+        });
+      }, 3000);
+    }
   }
 }
