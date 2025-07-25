@@ -2,25 +2,19 @@
 
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.15.
 
+## Features Demo
 
-## Demo Funzionalità
+### Client List and Filters
+  ![List and Filters](docs/gifs/output1.gif)
 
-### Lista Clienti e Filtri
-  ![Lista e 
-  Filtri](docs/gifs/output1.gif)
+### Create New Client
+  ![New Client](docs/gifs/output2.gif)
 
-  ### Creazione Nuovo Cliente
-  ![Nuovo 
-  Cliente](docs/gifs/output2.gif)
+### Edit Client
+  ![Edit Client](docs/gifs/output3.gif)
 
-  ### Modifica Cliente
-  ![Modifica 
-  Cliente](docs/gifs/output3.gif)
-
-  ### Eliminazione Cliente
-  ![Elimina 
-  Cliente](docs/gifs/output4.gif)
-
+### Delete Client
+  ![Delete Client](docs/gifs/output4.gif)
 
 ## Development server
 
