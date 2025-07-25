@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import Swal from 'sweetalert2';
+import { ClienteService } from '../../services/cliente.service';
+import { Cliente } from '../../models/cliente.model'; 
 
 @Component({
   selector: 'app-client-form',
@@ -16,18 +18,15 @@ export class ClientFormComponent implements OnInit {
   isModifica = false;
   clienteId: number | null = null;
   
-  //dati fittizi per la demo
-  clienti = [
-    { id: 1, nome: 'Mario', cognome: 'Rossi', indirizzo: 'Via Roma 1', localita: 'Centro', comune: 'Roma', provincia: 'RM', email: 'mario.rossi@email.com', note: 'Cliente VIP' },
-    { id: 2, nome: 'Lucia', cognome: 'Bianchi', indirizzo: 'Via Milano 2', localita: 'Isola', comune: 'Milano', provincia: 'MI', email: 'lucia.bianchi@email.com', note: '' },
-    { id: 3, nome: 'Giuseppe', cognome: 'Verdi', indirizzo: 'Via Napoli 3', localita: 'Vomero', comune: 'Napoli', provincia: 'NA', email: 'giuseppe.verdi@email.com', note: 'Musicista' },
-    { id: 4, nome: 'Anna', cognome: 'Neri', indirizzo: 'Corso Buenos Aires 4', localita: 'Porta Venezia', comune: 'Milano', provincia: 'MI', email: 'anna.neri@email.com', note: 'Designer' }
-  ];
+  loading = false;
+  error: string | null = null;
+
 
   constructor(
     private fb: FormBuilder,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private clienteService: ClienteService //servizio per operazioni CRUD sui clienti
   ) {
     this.clienteForm = this.createForm();
   }
@@ -35,7 +34,7 @@ export class ClientFormComponent implements OnInit {
   ngOnInit(): void {
     this.route.params.subscribe(params => {
       if (params['id']) {
-        this.clienteId = +params['id']; //converte l'id in numero passato da pagina precedente
+        this.clienteId = +params['id'];
         this.isModifica = true;
         this.caricaCliente(this.clienteId);
       }
@@ -56,10 +55,28 @@ export class ClientFormComponent implements OnInit {
   }
 
   private caricaCliente(id: number): void {
-    const cliente = this.clienti.find(c => c.id === id);
-    if (cliente) {
-      this.clienteForm.patchValue(cliente); //popola il form con i dati del cliente da modificare
-    }
+    this.loading = true;
+    this.error = null;
+    
+    this.clienteService.getClienteById(id).subscribe({
+      next: (cliente) => {
+        this.clienteForm.patchValue(cliente);
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Errore nel caricamento del cliente:', error);
+        this.error = 'Cliente non trovato';
+        this.loading = false;
+        
+        Swal.fire({
+          title: 'Errore!',
+          text: 'Cliente non trovato o errore del server.',
+          icon: 'error'
+        }).then(() => {
+          this.router.navigate(['/clienti']);
+        });
+      }
+    });
   }
 
   onSubmit(): void {
@@ -76,36 +93,75 @@ export class ClientFormComponent implements OnInit {
     }
   }
 
-  private modificaCliente(dati: any): void {
-    console.log('Modifica cliente:', dati);
+  private modificaCliente(dati: Cliente): void {
+    if (!this.clienteId) return;
     
-    Swal.fire({
-      title: 'Successo!',
-      text: 'Cliente modificato con successo',
-      icon: 'success',
-      timer: 2000,
-      showConfirmButton: false
+    this.loading = true;
+    
+    this.clienteService.updateCliente(this.clienteId, dati).subscribe({
+      next: (clienteAggiornato) => {
+        this.loading = false;
+        
+        Swal.fire({
+          title: 'Successo!',
+          text: 'Cliente modificato con successo',
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false
+        });
+        
+        setTimeout(() => {
+          this.router.navigate(['/clienti']);
+        }, 2000);
+      },
+      error: (error) => {
+        console.error('Errore nella modifica:', error);
+        this.loading = false;
+        
+        Swal.fire({
+          title: 'Errore!',
+          text: 'Impossibile modificare il cliente. Verifica i dati inseriti.',
+          icon: 'error'
+        });
+      }
     });
-    
-    setTimeout(() => {
-      this.router.navigate(['/clienti']);
-    }, 2000);
   }
 
-  private creaCliente(dati: any): void {
-    console.log('Crea cliente:', dati);
+  private creaCliente(dati: Cliente): void {
+    this.loading = true;
     
-    Swal.fire({
-      title: 'Successo!',
-      text: 'Cliente creato con successo',
-      icon: 'success',
-      timer: 2000,
-      showConfirmButton: false
+    this.clienteService.createCliente(dati).subscribe({
+      next: (nuovoCliente) => {
+        this.loading = false;
+        
+        Swal.fire({
+          title: 'Successo!',
+          text: 'Cliente creato con successo',
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false
+        });
+        
+        setTimeout(() => {
+          this.router.navigate(['/clienti']);
+        }, 2000);
+      },
+      error: (error) => {
+        console.error('Errore nella creazione:', error);
+        this.loading = false;
+        
+        let errorMessage = 'Impossibile creare il cliente.';
+        if (error.status === 400) {
+          errorMessage = 'Email già esistente o dati non validi.';
+        }
+        
+        Swal.fire({
+          title: 'Errore!',
+          text: errorMessage,
+          icon: 'error'
+        });
+      }
     });
-    
-    setTimeout(() => {
-      this.router.navigate(['/clienti']);
-    }, 2000);
   }
 
   private mostraErroriValidazione(): void {

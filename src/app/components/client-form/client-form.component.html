@@ -7,7 +7,20 @@
         </div>
         <!--card body è un contenitore per inserire il form -->
         <div class="card-body">
-          <form [formGroup]="clienteForm" (ngSubmit)="onSubmit()">
+          <!-- Loading indicator -->
+          <div *ngIf="loading" class="text-center py-4">
+            <div class="spinner-border" role="status">
+              <span class="visually-hidden">Caricamento...</span>
+            </div>
+            <p class="mt-2">{{ isModifica ? 'Caricamento dati cliente...' : 'Salvataggio in corso...' }}</p>
+          </div>
+
+          <!-- Error message -->
+          <div *ngIf="error && !loading" class="alert alert-danger" role="alert">
+            {{ error }}
+          </div>
+
+          <form [formGroup]="clienteForm" (ngSubmit)="onSubmit()" [class.opacity-50]="loading">
             
             <!--prima riga: Nome e Cognome -->
             <div class="row mb-3">
@@ -124,14 +137,16 @@
                 <button 
                   type="button" 
                   class="btn btn-secondary" 
-                  (click)="annulla()">
+                  (click)="annulla()"
+                  [disabled]="loading">
                   <i class="fas fa-times"></i> Annulla
                 </button>
                 <button 
                   type="submit" 
                   class="btn btn-primary"
-                  [disabled]="clienteForm.invalid">
-                  <i class="fas fa-save"></i> {{ isModifica ? 'Aggiorna' : 'Salva' }}
+                  [disabled]="clienteForm.invalid || loading">
+                  <span *ngIf="loading" class="spinner-border spinner-border-sm me-2" role="status"></span>
+                  <i *ngIf="!loading" class="fas fa-save"></i> {{ isModifica ? 'Aggiorna' : 'Salva' }}
                 </button>
               </div>
             </div>
