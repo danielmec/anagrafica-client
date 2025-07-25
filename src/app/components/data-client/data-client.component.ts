@@ -1,8 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
+import { ClienteService } from '../../services/cliente.service';
+import { Cliente } from '../../models/cliente.model';
 
 @Component({
   selector: 'app-data-client',
@@ -10,19 +12,48 @@ import Swal from 'sweetalert2';
   templateUrl: './data-client.component.html',
   styleUrl: './data-client.component.css'
 })
-export class DataClientComponent {
+export class DataClientComponent implements OnInit {
 
-  clienti = [
-    { id: 1, nome: 'Mario', cognome: 'Rossi', comune: 'Roma', email: 'mario.rossi@email.com' },
-    { id: 2, nome: 'Lucia', cognome: 'Bianchi', comune: 'Milano', email: 'lucia.bianchi@email.com' },
-    { id: 3, nome: 'Giuseppe', cognome: 'Verdi', comune: 'Napoli', email: 'giuseppe.verdi@email.com' },
-    { id: 4, nome: 'Anna', cognome: 'Neri', comune: 'Milano', email: 'anna.neri@email.com' }
-  ];
+  //variabili locali
+  clienti: Cliente[] = [];
+  loading = false;
+  error: string | null = null;
+  clientiFiltrati: Cliente[] = [];
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private clienteService: ClienteService //gestisce operazioni CRUD sui clienti
+  ) {}
 
-  clientiFiltrati = [...this.clienti];
+  ngOnInit(): void {
+    this.caricaClienti();
+  }
 
+  caricaClienti(): void {
+    this.loading = true;
+    this.error = null;
+    
+    this.clienteService.getAllClienti().subscribe({
+      next: (clienti) => {
+        this.clienti = clienti;
+        this.clientiFiltrati = [...clienti]; //per non avere riferimenti diretti
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Errore nel caricamento dei clienti:', error);
+        this.error = 'Errore nel caricamento dei clienti';
+        this.loading = false;
+        
+        Swal.fire({
+          title: 'Errore!',
+          text: 'Impossibile caricare i clienti. Verifica che il server sia attivo.',
+          icon: 'error'
+        });
+      }
+    });
+  }
+
+  
   //variabili pubbliche per i filtri e l'ordinamento
   filtri = {
     nome: '',
@@ -57,7 +88,7 @@ export class DataClientComponent {
     let risultato = this.clienti.filter(cliente => {
       return cliente.nome.toLowerCase().includes(this.filtri.nome.toLowerCase()) &&
              cliente.cognome.toLowerCase().includes(this.filtri.cognome.toLowerCase()) &&
-             cliente.comune.toLowerCase().includes(this.filtri.comune.toLowerCase()) &&
+             (cliente.comune || '').toLowerCase().includes(this.filtri.comune.toLowerCase()) &&
              cliente.email.toLowerCase().includes(this.filtri.email.toLowerCase());
     });
 
@@ -71,10 +102,10 @@ export class DataClientComponent {
   /**
    * Funzione ausiliare per ordinare l'array in base al dato e alla direzione già specificati
    */
-  private ordinaArray(array: any[], campo: string, direzione: 'asc' | 'desc') {
+  private ordinaArray(array: Cliente[], campo: string, direzione: 'asc' | 'desc') {
     return array.sort((a, b) => {
-      const valorA = a[campo].toLowerCase();
-      const valorB = b[campo].toLowerCase();
+      const valorA = (a[campo as keyof Cliente] || '').toString().toLowerCase();
+      const valorB = (b[campo as keyof Cliente] || '').toString().toLowerCase();
       
       //sort ha bisogno di -1, 1, 0 per determinare l'ordinamento
       if (direzione === 'asc') {
@@ -90,12 +121,12 @@ export class DataClientComponent {
     this.router.navigate(['/cliente/nuovo']);
   }
 
-  modificaCliente(cliente: any) {
+  modificaCliente(cliente: Cliente) {
+    console.log('Modifica cliente:', cliente, "id:", cliente.id);
     this.router.navigate(['/cliente', cliente.id]); //passa l'id del cliente da modificare
   }
 
-  eliminaCliente(cliente: any) {
-    //uso di SweetAlert per l'eliminazione
+  eliminaCliente(cliente: Cliente) {
     Swal.fire({
       title: 'Conferma eliminazione',
       text: `Sei sicuro di voler eliminare ${cliente.nome} ${cliente.cognome}?`,
@@ -106,23 +137,28 @@ export class DataClientComponent {
       confirmButtonText: 'Si, elimina!',
       cancelButtonText: 'Annulla'
     }).then((result) => {
-      if (result.isConfirmed) {
-        //va sostituito con la logica di eliminazione del cliente nel database
-        const index = this.clienti.indexOf(cliente);
-        if (index > -1) {
-          this.clienti.splice(index, 1);
-
-          this.applicaFiltri();
-          
-          //messaggio di successo
-          Swal.fire({
-            title: 'Eliminato!',
-            text: `${cliente.nome} ${cliente.cognome} è stato eliminato.`,
-            icon: 'success',
-            timer: 2000,
-            showConfirmButton: false
-          });
-        }
+      if (result.isConfirmed && cliente.id) {
+        this.clienteService.deleteCliente(cliente.id).subscribe({
+          next: () => {
+            this.caricaClienti();
+            
+            Swal.fire({
+              title: 'Eliminato!',
+              text: `${cliente.nome} ${cliente.cognome} è stato eliminato.`,
+              icon: 'success',
+              timer: 2000,
+              showConfirmButton: false
+            });
+          },
+          error: (error) => {
+            console.error('Errore nell\'eliminazione:', error);
+            Swal.fire({
+              title: 'Errore!',
+              text: 'Impossibile eliminare il cliente.',
+              icon: 'error'
+            });
+          }
+        });
       }
     });
   }
