@@ -50,7 +50,7 @@ export class DataClientComponent implements OnInit {
         
         //cliente da evidenziare, scorri fino ad esso
         if (this.highlightedClientId) {
-          setTimeout(() => this.scrollToClient(this.highlightedClientId!), 100);
+          setTimeout(() => this.scrollToClient(this.highlightedClientId!), 500);
         }
       },
       error: (error) => {
@@ -181,7 +181,7 @@ export class DataClientComponent implements OnInit {
    * Funzione per scorrere fino al cliente evidenziato
    * @param clienteId ID del cliente da evidenziare
    */
-  private scrollToClient(clienteId: number): void {
+  private scrollToClient(clienteId: number, retryCount: number = 0): void {
     const element = document.getElementById(`cliente-${clienteId}`);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -196,6 +196,9 @@ export class DataClientComponent implements OnInit {
           replaceUrl: true
         });
       }, 3000);
+    } else if (retryCount < 3) {
+
+      setTimeout(() => this.scrollToClient(clienteId, retryCount + 1), 300);
     }
   }
 }
